@@ -1,0 +1,30 @@
+#!/usr/bin/env -S ruby -w
+
+require "json"
+
+# TODO: add syntax for comments
+# TODO: add ability to set the note for the block, if that's ever allowed
+
+abort "usage: #{$0} text_files..." if ARGV.empty?
+
+desired = ARGF.readlines.map(&:chomp).sort.uniq
+current = JSON.parse(`gh api /user/blocks`).map { |h| h["login"] }
+
+add = desired - current
+del = current - desired
+
+unless add.empty? then
+  puts "Adding:"
+  add.sort.each do |nick|
+    puts nick
+    system "gh api --method PUT /user/blocks/#{nick}"
+  end
+end
+
+unless del.empty? then
+  puts "Deleting:"
+  del.sort.each do |nick|
+    puts nick
+    system "gh api --method DELETE /user/blocks/#{nick}"
+  end
+end
